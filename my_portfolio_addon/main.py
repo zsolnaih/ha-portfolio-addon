@@ -1,8 +1,49 @@
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+import re
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import json
 import os
 from pathlib import Path
+
+# def clean_number(value):
+#     value = value.replace(",", ".")
+#     return float(re.sub(r"[^\d\.\-]", "", value))
+
+def reduce_snapshots(data):
+    today = datetime.now().date()
+    grouped = defaultdict(list)
+
+    for entry in data:
+        ts = datetime.fromisoformat(entry["timestamp"])
+        grouped[ts.date()].append((ts, entry))
+
+    reduced = []
+
+    for day, items in grouped.items():
+        timestamps = [ts for ts, _ in items]
+
+        if day == today:
+            # Mai nap: minden snapshot megmarad
+            reduced.extend([entry for _, entry in items])
+
+        elif day >= today - timedelta(days=7):
+            # Elmúlt 7 nap: napi 2 snapshot (első és utolsó)
+            reduced.append(min(items, key=lambda x: x[0])[1])
+            reduced.append(max(items, key=lambda x: x[0])[1])
+
+        elif day >= today - timedelta(days=30):
+            # 1 hónap: heti 2 snapshot (hétfő + csütörtök)
+            if timestamps[0].weekday() in (0, 3):
+                reduced.append(min(items, key=lambda x: x[0])[1])
+
+        elif day >= date(today.year, 1, 1):
+            # YTD: heti 1 snapshot (hétfő)
+            if timestamps[0].weekday() == 0:
+                reduced.append(min(items, key=lambda x: x[0])[1])
+
+    return sorted(reduced, key=lambda x: x["timestamp"])
 
 # === Config ===
 CREDENTIALS_PATH = "credentials.json"   # Path of credentials
@@ -37,15 +78,17 @@ rows = data[1:]
 
 portfolio_entries = []
 for row in rows:
+    if not row[0].strip():
+        continue  # skip the summary row
     try:
         portfolio_entries.append({
             "ticker": row[0].strip(),
             "deviza": row[3].strip(),
             "db": float(row[2].replace(",", ".").strip()),
-            "buy_price": float(row[4].replace("Ft", "").replace(" ", "").replace(",", ".").strip()),
-            "sell_price": float(row[5].replace("Ft", "").replace(" ", "").replace(",", ".").strip()),
+            "buy_price": float(row[4].replace("Ft", "").replace("\xa0", "").replace(",", ".").strip()),
+            "sell_price": float(row[5].replace("Ft", "").replace("\xa0", "").replace(",", ".").strip()),
             "gain_percent": float(row[6].replace("%", "").replace(",", ".").strip()),
-            "gain_huf": float(row[7].replace("Ft", "").replace(" ", "").replace(",", ".").replace("-", "-").strip()),
+            "gain_huf": float(row[7].replace("Ft", "").replace("\xa0", "").replace(",", ".").replace("- ", "-").strip()),
             "weight_percent": float(row[8].replace("%", "").replace(",", ".").strip())
         })
     except Exception as e:
@@ -58,8 +101,8 @@ snapshot = {
 }
 
 # === Parse the existing portfolio.json ===
-if os.path.exists(JSON_LOG_PATH):
-    with open(JSON_LOG_PATH, "r") as f:
+if os.path.exists(JSON_OUTPUT_PATH):
+    with open(JSON_OUTPUT_PATH, "r") as f:
         try:
             existing_data = json.load(f)
         except json.JSONDecodeError:
@@ -69,8 +112,11 @@ else:
 
 existing_data.append(snapshot)
 
+# === Cleaning policy ===
+reduced_data = reduce_snapshots(existing_data)
+
 # === Write the new data to portfolio.json ===
-with open(JSON_LOG_PATH, "w") as f:
+with open(JSON_OUTPUT_PATH, "w") as f:
     json.dump(existing_data, f, indent=2)
 
-print(f"Data is saved in {JSON_LOG_PATH} ")
+print(f"Data is saved in {JSON_OUTPUT_PATH} ")
