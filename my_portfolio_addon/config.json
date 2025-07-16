@@ -1,1 +1,13 @@
-"version": "0.0.1"
+{
+  "name": "Portfolio Tracker",
+  "version": "0.1.0",
+  "slug": "my_portfolio_addon",
+  "description": "ETF portfolio tracker with Google Sheets integration",
+  "startup": "once",
+  "boot": "auto",
+  "arch": ["armv7", "aarch64", "amd64", "i386"],
+  "options": {},
+  "schema": {},
+  "map": ["share:rw"],
+  "host_network": false
+}
