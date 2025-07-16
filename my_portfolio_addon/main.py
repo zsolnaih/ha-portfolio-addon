@@ -66,6 +66,8 @@ except Exception as e:
 
 # === Reading Google Sheets ===
 try:
+    print("Looking for credentials at:", CREDENTIALS_PATH)
+    print("File exists:", os.path.exists(CREDENTIALS_PATH))
     sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
     data = sheet.get_all_values()
 except Exception as e:
