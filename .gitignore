@@ -1,5 +1,5 @@
 my_portfolio_addon/credentials.json
-my_portfolio_addon/*portfolio.json
+my_portfolio_addon/*portfolio*.json
 my_portfolio_addon/*.ps1
 
 # Byte-compiled / optimized / DLL files

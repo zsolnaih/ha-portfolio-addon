@@ -1,6 +1,6 @@
 {
   "name": "Portfolio Tracker",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "slug": "my_portfolio_addon",
   "description": "ETF portfolio tracker with Google Sheets integration",
   "startup": "once",

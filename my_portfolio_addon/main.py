@@ -49,11 +49,11 @@ def reduce_snapshots(data):
 # === Config ===
 SHEET_NAME = "Stock Portfolio"            # GoogleSheet
 WORKSHEET_NAME = "Report"                 # Worksheet
-JSON_OUTPUT_PATH = "/share/portfolio_log.json"    # Output json (in add-on: /share/portfolio.json)
-CREDENTIALS_PATH = "/share/credentials.json"  # Path of credentials
+# JSON_OUTPUT_PATH = "/share/portfolio_log.json"    # Output json (in add-on: /share/portfolio.json)
+# CREDENTIALS_PATH = "/share/credentials.json"  # Path of credentials
 
-# CREDENTIALS_PATH = "credentials.json"  # Path of credentials
-# JSON_OUTPUT_PATH = "portfolio_log.json"
+CREDENTIALS_PATH = "credentials.json"  # Path of credentials
+JSON_OUTPUT_PATH = "portfolio_log.json"
 
 # === Google Sheets API authentication ===
 scope = [
@@ -70,8 +70,6 @@ except Exception as e:
 
 # === Reading Google Sheets ===
 try:
-    print("Looking for credentials at:", CREDENTIALS_PATH)
-    print("File exists:", os.path.exists(CREDENTIALS_PATH))
     sheet = client.open(SHEET_NAME).worksheet(WORKSHEET_NAME)
     data = sheet.get_all_values()
 except Exception as e:
@@ -82,59 +80,43 @@ except Exception as e:
 headers = data[0]
 rows = data[1:]
 
-portfolio_entries = []
 summary = []
 for row in rows:
     if not row[0].strip():
         try:
             summary.append({
-                "buy_price": float(row[4].replace("Ft", "").replace("\xa0", "").replace(",", ".").strip()),
                 "portfolio_value": float(row[5].replace("Ft", "").replace("\xa0", "").replace(",", ".").strip()),
-                "gain_percent": float(row[6].replace("%", "").replace(",", ".").strip()),
-                "gain_huf": float(row[7].replace("Ft", "").replace("\xa0", "").replace(",", ".").replace("- ", "-").strip())
+                "gain_percent": float(row[6].replace("%", "").replace(",", ".").strip())
             })
         except Exception as e:
             print(f"Error in row: {row} > {e}")
-        continue
-    try:
-        portfolio_entries.append({
-            "ticker": row[0].strip(),
-            "deviza": row[3].strip(),
-            "db": float(row[2].replace(",", ".").strip()),
-            "buy_price": float(row[4].replace("Ft", "").replace("\xa0", "").replace(",", ".").strip()),
-            "sell_price": float(row[5].replace("Ft", "").replace("\xa0", "").replace(",", ".").strip()),
-            "gain_percent": float(row[6].replace("%", "").replace(",", ".").strip()),
-            "gain_huf": float(row[7].replace("Ft", "").replace("\xa0", "").replace(",", ".").replace("- ", "-").strip()),
-            "weight_percent": float(row[8].replace("%", "").replace(",", ".").strip())
-        })
-    except Exception as e:
-        print(f"Error in row: {row} > {e}")
+
 
 # === New snapshot with TimeStamp ===
 snapshot = {
     # "timestamp": datetime.now().replace(second=0, microsecond=0).isoformat(),
     "timestamp": datetime.now(ZoneInfo("Europe/Budapest")).replace(second=0, microsecond=0).isoformat(),
-    "portfolio": portfolio_entries,
-    "summary": summary
+    "portfolio_value": summary[0]["portfolio_value"],
+    "gain_percent": summary[0]["gain_percent"]
 }
 
 # === Parse the existing portfolio.json ===
-if os.path.exists(JSON_OUTPUT_PATH):
-    with open(JSON_OUTPUT_PATH, "r") as f:
-        try:
-            existing_data = json.load(f)
-        except json.JSONDecodeError:
-            existing_data = []
-else:
-    existing_data = []
+# if os.path.exists(JSON_OUTPUT_PATH):
+#     with open(JSON_OUTPUT_PATH, "r") as f:
+#         try:
+#             existing_data = json.load(f)
+#         except json.JSONDecodeError:
+#             existing_data = []
+# else:
+#     existing_data = []
 
-existing_data.append(snapshot)
+# existing_data.append(snapshot)
 
 # === Cleaning policy ===
-reduced_data = reduce_snapshots(existing_data)
+# reduced_data = reduce_snapshots(existing_data)
 
 # === Write the new data to portfolio.json ===
 with open(JSON_OUTPUT_PATH, "w") as f:
-    json.dump(reduced_data, f, indent=2)
+    json.dump(snapshot, f, indent=2)
 
 print(f"Data is saved in {JSON_OUTPUT_PATH} ")
