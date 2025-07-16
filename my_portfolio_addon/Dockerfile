@@ -3,12 +3,18 @@ FROM $BUILD_FROM
 
 ENV LANG C.UTF-8
 
-# Kötelező csomagok + Python modulok
-COPY requirements.txt /
-RUN apk add --no-cache python3 py3-pip && pip3 install --no-cache-dir -r /requirements.txt
+# Necessary packages
+RUN apk add --no-cache python3 py3-pip python3-virtualenv
 
-COPY run.sh /run.sh
+# Copy
+COPY requirements.txt /requirements.txt
 COPY main.py /main.py
+COPY run.sh /run.sh
 RUN chmod a+x /run.sh
 
-CMD [ "/run.sh" ]
+# Creating venv
+RUN python3 -m venv /venv && \
+    /venv/bin/pip install --no-cache-dir -r /requirements.txt
+
+# Start
+CMD ["/run.sh"]
