@@ -6,6 +6,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import json
 import os
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 # def clean_number(value):
 #     value = value.replace(",", ".")
@@ -46,10 +47,13 @@ def reduce_snapshots(data):
     return sorted(reduced, key=lambda x: x["timestamp"])
 
 # === Config ===
-CREDENTIALS_PATH = "/share/credentials.json"  # Path of credentials
 SHEET_NAME = "Stock Portfolio"            # GoogleSheet
 WORKSHEET_NAME = "Report"                 # Worksheet
 JSON_OUTPUT_PATH = "/share/portfolio_log.json"    # Output json (in add-on: /share/portfolio.json)
+CREDENTIALS_PATH = "/share/credentials.json"  # Path of credentials
+
+# CREDENTIALS_PATH = "credentials.json"  # Path of credentials
+# JSON_OUTPUT_PATH = "portfolio_log.json"
 
 # === Google Sheets API authentication ===
 scope = [
@@ -108,7 +112,8 @@ for row in rows:
 
 # === New snapshot with TimeStamp ===
 snapshot = {
-    "timestamp": datetime.now().replace(second=0, microsecond=0).isoformat(),
+    # "timestamp": datetime.now().replace(second=0, microsecond=0).isoformat(),
+    "timestamp": datetime.now(ZoneInfo("Europe/Budapest")).replace(second=0, microsecond=0).isoformat(),
     "portfolio": portfolio_entries,
     "summary": summary
 }
