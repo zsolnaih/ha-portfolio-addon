@@ -49,11 +49,11 @@ def reduce_snapshots(data):
 # === Config ===
 SHEET_NAME = "Stock Portfolio"            # GoogleSheet
 WORKSHEET_NAME = "Report"                 # Worksheet
-# JSON_OUTPUT_PATH = "/share/portfolio_log.json"    # Output json (in add-on: /share/portfolio.json)
-# CREDENTIALS_PATH = "/share/credentials.json"  # Path of credentials
+JSON_OUTPUT_PATH = "/share/portfolio_log.json"    # Output json (in add-on: /share/portfolio.json)
+CREDENTIALS_PATH = "/share/credentials.json"  # Path of credentials
 
-CREDENTIALS_PATH = "credentials.json"  # Path of credentials
-JSON_OUTPUT_PATH = "portfolio_log.json"
+# CREDENTIALS_PATH = "credentials.json"  # Path of credentials
+# JSON_OUTPUT_PATH = "portfolio_log.json"
 
 # === Google Sheets API authentication ===
 scope = [
